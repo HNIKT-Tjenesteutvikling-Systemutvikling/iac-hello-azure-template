@@ -1,0 +1,49 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docker/**'
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: hello-azure
+
+jobs:
+  build-and-push:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Get ACR name from Terraform outputs
+        id: get-acr
+        run: |
+          # If terraform state is available, get ACR name from outputs
+          # Otherwise, use default from variables
+          echo "acr_name=${{ secrets.ACR_NAME }}" >> $GITHUB_OUTPUT
+
+      - name: Login to Azure Container Registry
+        run: |
+          az acr login --name ${{ steps.get-acr.outputs.acr_name }}
+
+      - name: Build and push Docker image
+        run: |
+          cd docker
+          docker build -t ${{ steps.get-acr.outputs.acr_name }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }} .
+          docker build -t ${{ steps.get-acr.outputs.acr_name }}.azurecr.io/${{ env.IMAGE_NAME }}:latest .
+          docker push ${{ steps.get-acr.outputs.acr_name }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          docker push ${{ steps.get-acr.outputs.acr_name }}.azurecr.io/${{ env.IMAGE_NAME }}:latest
+
+      - name: Azure Logout
+        if: always()
+        run: az logout
