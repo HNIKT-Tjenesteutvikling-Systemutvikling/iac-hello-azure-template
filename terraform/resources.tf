@@ -15,6 +15,8 @@ resource "azurerm_container_registry" "acr" {
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
   sku                 = "Basic"
+  # Admin enabled for simplicity in demo scenarios
+  # For production, consider using managed identity or service principal authentication
   admin_enabled       = true
 
   tags = {
