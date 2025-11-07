@@ -233,9 +233,19 @@ variable "resource_group_name" {
 }
 
 variable "acr_name" {
-  default = "acrhelloazure"   # Må være unikt globalt
+  # ACR-navn må være globalt unikt og kun inneholde små bokstaver og tall
+  default = "acrhelloazure"   # Må være unikt globalt - legg til et suffiks!
+}
+
+variable "container_name" {
+  # Brukes også som DNS-label og må være globalt unikt
+  default = "aci-hello-azure"  # Må være unikt globalt - legg til et suffiks!
 }
 ```
+
+**Viktig:** ACR-navn og container-navn må være globalt unike. Legg til et unikt suffiks, f.eks. dine initialer eller et tilfeldig tall:
+- `acrhelloazurejhn123`
+- `aci-hello-azure-jhn123`
 
 ### Endre Azure region
 
