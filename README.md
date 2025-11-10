@@ -21,32 +21,81 @@ Dette prosjektet demonstrerer hvordan man:
 
 - Azure-abonnement
 - GitHub-konto
-- Azure Service Principal med nødvendige tilganger
+- Azure Managed Identity (opprettes som en del av oppsettet)
 
 ## 🔐 Oppsett av GitHub Secrets
 
-For å kjøre workflows og deploye til Azure, må følgende secrets konfigureres i GitHub repository:
+For å kjøre workflows og deploye til Azure, må følgende konfigureres i GitHub repository:
 
-### 1. Opprett Azure Service Principal
+### 1. Opprett Azure App Registration med Federated Credentials
+
+Dette prosjektet bruker **Managed Identities** via Azure Federated Identity (OIDC) for autentisering med GitHub Actions, som er sikrere enn service principals med hemmeligheter.
 
 ```bash
+# Logg inn på Azure
 az login
-az ad sp create-for-rbac --name "github-actions-hello-azure" \
-  --role contributor \
-  --scopes /subscriptions/{subscription-id} \
-  --sdk-auth
+
+# Sett variabler
+SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+APP_NAME="github-actions-hello-azure"
+REPO_OWNER="HNIKT-Tjenesteutvikling-Systemutvikling"
+REPO_NAME="iac-hello-azure-template"
+
+# Opprett App Registration
+APP_ID=$(az ad app create --display-name "$APP_NAME" --query appId -o tsv)
+echo "Application (client) ID: $APP_ID"
+
+# Opprett Service Principal
+SP_ID=$(az ad sp create --id $APP_ID --query id -o tsv)
+echo "Service Principal ID: $SP_ID"
+
+# Gi Contributor-tilgang på subscription-nivå
+az role assignment create \
+  --assignee $APP_ID \
+  --role Contributor \
+  --scope /subscriptions/$SUBSCRIPTION_ID
+
+# Opprett federated identity credential for main branch
+az ad app federated-credential create \
+  --id $APP_ID \
+  --parameters '{
+    "name": "github-main-branch",
+    "issuer": "https://token.actions.githubusercontent.com",
+    "subject": "repo:'$REPO_OWNER'/'$REPO_NAME':ref:refs/heads/main",
+    "description": "GitHub Actions Main Branch",
+    "audiences": ["api://AzureADTokenExchange"]
+  }'
+
+# Opprett federated identity credential for pull requests
+az ad app federated-credential create \
+  --id $APP_ID \
+  --parameters '{
+    "name": "github-pull-requests",
+    "issuer": "https://token.actions.githubusercontent.com",
+    "subject": "repo:'$REPO_OWNER'/'$REPO_NAME':pull_request",
+    "description": "GitHub Actions Pull Requests",
+    "audiences": ["api://AzureADTokenExchange"]
+  }'
+
+# Hent tenant ID
+TENANT_ID=$(az account show --query tenantId -o tsv)
+echo "Tenant ID: $TENANT_ID"
+echo "Subscription ID: $SUBSCRIPTION_ID"
 ```
+
+**Viktig:** Noter deg følgende verdier for bruk i GitHub Secrets:
+- Application (client) ID
+- Tenant ID
+- Subscription ID
 
 ### 2. Konfigurer GitHub Secrets
 
 Gå til repository → Settings → Secrets and variables → Actions, og legg til følgende secrets:
 
-#### Azure Credentials
-- **AZURE_CREDENTIALS**: JSON output fra Service Principal kommandoen ovenfor
-- **ARM_CLIENT_ID**: Application (client) ID fra Service Principal
-- **ARM_CLIENT_SECRET**: Client secret fra Service Principal
-- **ARM_SUBSCRIPTION_ID**: Din Azure Subscription ID
-- **ARM_TENANT_ID**: Din Azure Tenant ID
+#### Azure OIDC Authentication
+- **AZURE_CLIENT_ID**: Application (client) ID fra App Registration
+- **AZURE_TENANT_ID**: Din Azure Tenant ID
+- **AZURE_SUBSCRIPTION_ID**: Din Azure Subscription ID
 
 #### Terraform State Backend (valgfritt)
 Hvis du bruker remote state backend:
