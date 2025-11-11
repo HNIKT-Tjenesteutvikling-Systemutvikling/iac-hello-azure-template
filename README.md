@@ -288,6 +288,7 @@ git push origin feature/min-endring
 - Test endringene dine før du sender inn PR
 - Skriv klare commit-meldinger
 - Oppdater dokumentasjon hvis nødvendig
+- Pass på å ikke dele sensitiv informasjon i kode og git historikk
 
 ### Mer informasjon
 
