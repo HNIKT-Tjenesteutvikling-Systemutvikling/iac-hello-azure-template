@@ -150,7 +150,14 @@ az storage container create \
 
 ### Endre ressursnavn (anbefalt)
 
-Rediger `terraform/variables.tf` for å endre standardverdier:
+Avsnitt i arbeid.
+
+```bash
+cp ${CODESPACE_VSCODE_FOLDER}/terraform/backend.hcl.example ${CODESPACE_VSCODE_FOLDER}/terraform/backend.hcl
+
+```
+
+~~Rediger `terraform/variables.tf` for å endre standardverdier:~~
 
 ```hcl
 variable "resource_group_name" {
@@ -168,11 +175,11 @@ variable "container_name" {
 }
 ```
 
-**Viktig:** ACR-navn og container-navn må være globalt unike. Legg til et unikt postfiks eller suffiks, f.eks. dine initialer eller et tilfeldig tall:
+~~**Viktig:** ACR-navn og container-navn må være globalt unike. Legg til et unikt postfiks eller suffiks, f.eks. dine initialer eller et tilfeldig tall:~~
 - `jhn123acrhelloazure`
 - `jhn123-aci-hello-azure`
 
-Eller bedre, kjør følgende kommandoer:
+~~Eller bedre, kjør følgende kommandoer:~~
 
 ```bash
 TERRAFORM_VARIABLES_TF_PATH="${CODESPACE_VSCODE_FOLDER}/terraform/variables.tf"
@@ -204,7 +211,7 @@ Om du har fulgt guiden hit så er det mulig at du kan hoppe over stegene 1, 2 og
 4. Naviger til terraform-mappen og kjør:
    ```bash
    cd terraform
-   terraform init
+   terraform init -backend-config="backend.hcl"
    terraform plan
    terraform apply
    ```
