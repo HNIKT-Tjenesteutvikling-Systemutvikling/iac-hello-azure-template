@@ -24,11 +24,9 @@ Dette prosjektet demonstrerer hvordan man:
 
 ## 🔐 Oppsett av GitHub Secrets
 
-For å kjøre workflows og deploye til Azure, må følgende konfigureres i GitHub repository:
+For å kjøre workflows og deploye til Azure, må følgende konfigureres fra shell i Github Codespaces.
 
-### 1. Opprett Azure App Registration med Federated Credentials
-
-Dette prosjektet bruker **Managed Identities** via Azure Federated Identity (OIDC) for autentisering med GitHub Actions, som er sikrere enn service principals med hemmeligheter.
+### 1. Opprett Azure App Registration med Federated Credentials fra CLI
 
 ```bash
 # Logg inn på Azure
@@ -36,17 +34,24 @@ az login
 
 # Sett variabler
 SUBSCRIPTION_ID=$(az account show --query id -o tsv)
-APP_NAME="github-actions-hello-azure"
-REPO_OWNER="HNIKT-Tjenesteutvikling-Systemutvikling"
-REPO_NAME="iac-hello-azure-template"
+REPO_OWNER="$(echo $GITHUB_REPOSITORY | cut -d "/" -f 1)"
+REPO_NAME="$(echo $GITHUB_REPOSITORY | cut -d "/" -f 2)"
+APP_NAME="${GITHUB_USER}-${REPO_NAME}"
+echo "Opprettet variabler: SUBSCRIPTION_ID=${SUBSCRIPTION_ID}, REPO_OWNER=${REPO_OWNER}, REPO_NAME=${REPO_NAME}, APP_NAME=${APP_NAME}."
 
 # Opprett App Registration
 APP_ID=$(az ad app create --display-name "$APP_NAME" --query appId -o tsv)
-echo "Application (client) ID: $APP_ID"
+echo "Application (client) ID: APP_ID=${APP_ID}."
+```
 
+Problemløsing: Hva om jeg får feil `Directory permission is needed for the current user to register the application`?
+
+Svar: Oppsett av Github Workflow kan avventes, fortsett på steg 3.
+
+```bash
 # Opprett Service Principal
 SP_ID=$(az ad sp create --id $APP_ID --query id -o tsv)
-echo "Service Principal ID: $SP_ID"
+echo "Service Principal ID: SP_ID=${SP_ID}"
 
 # Gi Contributor-tilgang på subscription-nivå
 az role assignment create \
