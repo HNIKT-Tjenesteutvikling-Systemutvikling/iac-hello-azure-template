@@ -245,3 +245,51 @@ Dette prosjektet er lisensiert under MIT-lisensen - se LICENSE filen for detalje
 ## 🤝 Bidra
 
 Bidrag er velkomne! Åpne gjerne issues eller pull requests.
+
+### Hvordan bidra til dette prosjektet
+
+Dette er et offentlig repository og vi følger standard åpen kildekode-praksis for bidrag:
+
+#### 1. Fork og klon repository
+```bash
+# Fork prosjektet via GitHub UI, deretter:
+git clone https://github.com/DITT-BRUKERNAVN/iac-hello-azure-template.git
+cd iac-hello-azure-template
+```
+
+#### 2. Opprett en feature branch
+```bash
+# Opprett en branch for dine endringer
+git checkout -b feature/min-endring
+```
+
+#### 3. Gjør endringer og commit
+```bash
+# Gjør dine endringer, deretter:
+git add .
+git commit -m "Beskrivelse av endringen"
+```
+
+#### 4. Push til din fork
+```bash
+git push origin feature/min-endring
+```
+
+#### 5. Opprett en Pull Request
+- Gå til din fork på GitHub
+- Klikk på "Compare & pull request"
+- Beskriv endringene dine og send inn PR-en til `main` branch i det opprinnelige repositoryet
+
+### Retningslinjer
+
+- Følg eksisterende kodestil og struktur
+- Test endringene dine før du sender inn PR
+- Skriv klare commit-meldinger
+- Oppdater dokumentasjon hvis nødvendig
+
+### Mer informasjon
+
+For mer detaljer om hvordan man bidrar til åpen kildekode-prosjekter på GitHub, se:
+- [GitHub Docs - Contributing to projects](https://docs.github.com/en/get-started/exploring-projects-on-github/contributing-to-a-project)
+- [GitHub Docs - Fork a repo](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo)
+- [GitHub Docs - Creating a pull request from a fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request-from-a-fork)
