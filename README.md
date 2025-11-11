@@ -255,8 +255,8 @@ Sjekk gjerne ut [Github sin veiledning](https://docs.github.com/en/get-started/e
 #### 1. Fork og klon repository
 ```bash
 # Fork prosjektet via GitHub UI, deretter:
-git clone https://github.com/DITT-BRUKERNAVN/iac-hello-azure-template.git
-cd iac-hello-azure-template
+git clone https://github.com/<DITT-BRUKERNAVN>/<REPOSITORY-NAVN>.git
+cd <REPOSITORY-NAVN>
 ```
 
 #### 2. Opprett en feature branch
