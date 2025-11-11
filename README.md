@@ -15,7 +15,6 @@ Dette prosjektet demonstrerer hvordan man:
 - [Komme i gang](#komme-i-gang)
 - [Prosjektstruktur](#prosjektstruktur)
 - [GitHub Workflows](#github-workflows)
-- [Lokal utvikling](#lokal-utvikling)
 
 ## 🔧 Forutsetninger
 
@@ -149,33 +148,7 @@ az storage container create \
    terraform apply
    ```
 
-### Alternativ 2: Lokal utvikling
-
-1. Installer verktøy:
-   - [Terraform](https://www.terraform.io/downloads)
-   - [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
-   - [Docker](https://docs.docker.com/get-docker/)
-
-2. Klon repository:
-   ```bash
-   git clone https://github.com/HNIKT-Tjenesteutvikling-Systemutvikling/iac-hello-azure.git
-   cd iac-hello-azure
-   ```
-
-3. Logg inn på Azure:
-   ```bash
-   az login
-   ```
-
-4. Deploy infrastruktur:
-   ```bash
-   cd terraform
-   terraform init
-   terraform plan
-   terraform apply
-   ```
-
-### Alternativ 3: Automatisk deployment med GitHub Actions
+### Alternativ 2: Automatisk deployment med GitHub Actions
 
 1. Push endringer til `main` branch
 2. Workflows kjører automatisk:
@@ -230,45 +203,6 @@ Steg:
 1. Bygger Docker image
 2. Tagger med commit SHA og "latest"
 3. Pusher til Azure Container Registry
-
-## 💻 Lokal utvikling
-
-### Teste Docker image lokalt
-
-```bash
-cd docker
-docker build -t hello-azure .
-docker run -p 8080:80 hello-azure
-```
-
-Åpne nettleseren på http://localhost:8080
-
-### Terraform kommandoer
-
-```bash
-cd terraform
-
-# Initialiser Terraform
-terraform init
-
-# Valider konfigurasjon
-terraform validate
-
-# Formatere kode
-terraform fmt -recursive
-
-# Se planlagte endringer
-terraform plan
-
-# Appliser endringer
-terraform apply
-
-# Se outputs
-terraform output
-
-# Destroy ressurser
-terraform destroy
-```
 
 ## 🛠️ Tilpassing
 
