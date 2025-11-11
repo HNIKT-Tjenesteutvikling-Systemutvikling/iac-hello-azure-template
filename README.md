@@ -248,7 +248,9 @@ Bidrag er velkomne! Åpne gjerne issues eller pull requests.
 
 ### Hvordan bidra til dette prosjektet
 
-Dette er et offentlig repository og vi følger standard åpen kildekode-praksis for bidrag:
+Merk at all kode og historikk kan bli synlig for alle, følg åpen kildekode-praksis og tenk på hva du deler.
+
+Sjekk gjerne ut [Github sin veiledning](https://docs.github.com/en/get-started/exploring-projects-on-github/contributing-to-a-project) som en introduksjon. Stegene under passer for prosjekter der man ikke har tilgang til å gjøre egne endringer:
 
 #### 1. Fork og klon repository
 ```bash
