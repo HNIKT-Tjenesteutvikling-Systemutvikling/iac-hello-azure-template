@@ -10,17 +10,26 @@ Dette prosjektet demonstrerer hvordan man:
 
 ## 📋 Innhold
 
-- [Forutsetninger](#forutsetninger)
-- [Oppsett av GitHub Secrets](#oppsett-av-github-secrets)
-- [Komme i gang](#komme-i-gang)
-- [Prosjektstruktur](#prosjektstruktur)
-- [GitHub Workflows](#github-workflows)
+- [Forutsetninger](#-forutsetninger)
+- [Oppsett av GitHub Secrets](#-oppsett-av-github-secrets)
+- [Komme i gang](#-komme-i-gang)
+- [Prosjektstruktur](#-prosjektstruktur)
+- [GitHub Workflows](#-github-workflows)
 
 ## 🔧 Forutsetninger
+
+### Grunnleggende forutsetninger
 
 - Azure-abonnement
 - GitHub-konto
 - Azure Managed Identity (opprettes som en del av oppsettet)
+
+### Utviklingsmiljø
+
+ 1. Dette prosjektet er ment å kjøre i GitHub Codespaces.
+ 2. Normalt vil du først [opprette ditt eget GitHub repository basert på template](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template).
+ 3. Deretter kan du [åpne ett repository i GitHub Codespaces](https://docs.github.com/en/codespaces/developing-in-a-codespace/creating-a-codespace-for-a-repository).
+ 4. Om du allerede har åpnet prosjektet i GitHub Codespaces, gå til [github.com/codespaces](https://github.com/codespaces) for å finne igjen instansen.
 
 ## 🔐 Oppsett av GitHub Secrets
 
@@ -46,7 +55,7 @@ echo "Application (client) ID: APP_ID=${APP_ID}."
 
 Problemløsing: Hva om jeg får feil `Directory permission is needed for the current user to register the application`?
 
-Svar: Oppsett av Github Workflow kan avventes, fortsett på steg 3.
+Svar: Inntil det er en løsning på dette, så kan oppsett av Github Workflow avventes, fortsett på steg 3.
 
 ```bash
 # Opprett Service Principal
@@ -114,10 +123,11 @@ Hvis du bruker remote state backend:
 
 ```bash
 # Variabler
-RESOURCE_GROUP_NAME="rg-terraform-state"
+RESOURCE_GROUP_NAME="${GITHUB_USER}-rg-terraform-state"
 STORAGE_ACCOUNT_NAME="sttfstate$(openssl rand -hex 4)"
 CONTAINER_NAME="tfstate"
 LOCATION="norwayeast"
+echo "Opprettet variabler: RESOURCE_GROUP_NAME=${RESOURCE_GROUP_NAME}, STORAGE_ACCOUNT_NAME=${STORAGE_ACCOUNT_NAME}, CONTAINER_NAME=${CONTAINER_NAME}, LOCATION=${LOCATION}."
 
 # Opprett resource group
 az group create --name $RESOURCE_GROUP_NAME --location $LOCATION
@@ -132,14 +142,60 @@ az storage account create \
 # Opprett blob container
 az storage container create \
   --name $CONTAINER_NAME \
-  --account-name $STORAGE_ACCOUNT_NAME
+  --account-name $STORAGE_ACCOUNT_NAME \
+  --auth-mode login
+```
+
+## 🛠️ Tilpassing
+
+### Endre ressursnavn (anbefalt)
+
+Rediger `terraform/variables.tf` for å endre standardverdier:
+
+```hcl
+variable "resource_group_name" {
+  default = "rg-hello-azure"  # Endre her
+}
+
+variable "acr_name" {
+  # ACR-navn må være globalt unikt og kun inneholde små bokstaver og tall
+  default = "acrhelloazure"   # Må være unikt globalt - legg til et postfiks eller suffiks!
+}
+
+variable "container_name" {
+  # Brukes også som DNS-label og må være globalt unikt
+  default = "aci-hello-azure"  # Må være unikt globalt - legg til et postfiks eller suffiks!
+}
+```
+
+**Viktig:** ACR-navn og container-navn må være globalt unike. Legg til et unikt postfiks eller suffiks, f.eks. dine initialer eller et tilfeldig tall:
+- `jhn123acrhelloazure`
+- `jhn123-aci-hello-azure`
+
+Eller bedre, kjør følgende kommandoer:
+
+```bash
+TERRAFORM_VARIABLES_TF_PATH="${CODESPACE_VSCODE_FOLDER}/terraform/variables.tf"
+sed -i "s/rg-hello-azure/${GITHUB_USER}-rg-hello-azure/g" $TERRAFORM_VARIABLES_TF_PATH
+sed -i "s/acrhelloazure/${GITHUB_USER}acrhelloazure/g" $TERRAFORM_VARIABLES_TF_PATH
+sed -i "s/aci-hello-azure/${GITHUB_USER}-aci-hello-azure/g" $TERRAFORM_VARIABLES_TF_PATH
+```
+
+### Endre Azure region (valgfritt)
+
+```hcl
+variable "location" {
+  default = "norwayeast"  # Endre til ønsket region
+}
 ```
 
 ## 🚀 Komme i gang
 
 ### Alternativ 1: Bruk GitHub Codespaces (anbefalt)
 
-1. Klikk på **Code** → **Codespaces** → **Create codespace on main**
+Om du har fulgt guiden hit så er det mulig at du kan hoppe over stegene 1, 2 og 3.
+
+1. Se [forutsetningene](#-forutsetninger) igjen, og pass på at du har ett kjørende Codespace for de neste stegene.
 2. Vent til containeren er bygget (inkluderer Terraform og Azure CLI)
 3. Logg inn på Azure:
    ```bash
@@ -208,40 +264,6 @@ Steg:
 1. Bygger Docker image
 2. Tagger med commit SHA og "latest"
 3. Pusher til Azure Container Registry
-
-## 🛠️ Tilpassing
-
-### Endre ressursnavn
-
-Rediger `terraform/variables.tf` for å endre standardverdier:
-
-```hcl
-variable "resource_group_name" {
-  default = "rg-hello-azure"  # Endre her
-}
-
-variable "acr_name" {
-  # ACR-navn må være globalt unikt og kun inneholde små bokstaver og tall
-  default = "acrhelloazure"   # Må være unikt globalt - legg til et suffiks!
-}
-
-variable "container_name" {
-  # Brukes også som DNS-label og må være globalt unikt
-  default = "aci-hello-azure"  # Må være unikt globalt - legg til et suffiks!
-}
-```
-
-**Viktig:** ACR-navn og container-navn må være globalt unike. Legg til et unikt suffiks, f.eks. dine initialer eller et tilfeldig tall:
-- `acrhelloazurejhn123`
-- `aci-hello-azure-jhn123`
-
-### Endre Azure region
-
-```hcl
-variable "location" {
-  default = "norwayeast"  # Endre til ønsket region
-}
-```
 
 ## 📝 Lisens
 
