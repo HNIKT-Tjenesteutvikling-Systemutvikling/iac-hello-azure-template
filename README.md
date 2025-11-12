@@ -150,42 +150,43 @@ az storage container create \
 
 ### Endre ressursnavn (anbefalt)
 
-Avsnitt i arbeid.
+**Avsnitt i arbeid.**
 
-```bash
-cp ${CODESPACE_VSCODE_FOLDER}/terraform/backend.hcl.example ${CODESPACE_VSCODE_FOLDER}/terraform/backend.hcl
-
-```
-
-~~Rediger `terraform/variables.tf` for å endre standardverdier:~~
+Vi må overstyre `terraform/variables.tf`, legg merke til standardverdiene for følgende variabler.
 
 ```hcl
 variable "resource_group_name" {
-  default = "rg-hello-azure"  # Endre her
+  default = "rg-hello-azure"  # Denne ønsker vi å overstyre.
 }
 
 variable "acr_name" {
   # ACR-navn må være globalt unikt og kun inneholde små bokstaver og tall
-  default = "acrhelloazure"   # Må være unikt globalt - legg til et postfiks eller suffiks!
+  default = "acrhelloazure"   # Må være unikt globalt.
 }
 
 variable "container_name" {
   # Brukes også som DNS-label og må være globalt unikt
-  default = "aci-hello-azure"  # Må være unikt globalt - legg til et postfiks eller suffiks!
+  default = "aci-hello-azure"  # Må være unikt globalt.
 }
 ```
 
-~~**Viktig:** ACR-navn og container-navn må være globalt unike. Legg til et unikt postfiks eller suffiks, f.eks. dine initialer eller et tilfeldig tall:~~
-- `jhn123acrhelloazure`
-- `jhn123-aci-hello-azure`
-
-~~Eller bedre, kjør følgende kommandoer:~~
+Det er ikke nødvendig å endre `terraform/variables.tf`, istedenfor kan vi bruke en konfigurasjonsfil som vi bruker når vi kjører `terraform init` senere. Kjør følgende kode.
 
 ```bash
-TERRAFORM_VARIABLES_TF_PATH="${CODESPACE_VSCODE_FOLDER}/terraform/variables.tf"
-sed -i "s/rg-hello-azure/${GITHUB_USER}-rg-hello-azure/g" $TERRAFORM_VARIABLES_TF_PATH
-sed -i "s/acrhelloazure/${GITHUB_USER}acrhelloazure/g" $TERRAFORM_VARIABLES_TF_PATH
-sed -i "s/aci-hello-azure/${GITHUB_USER}-aci-hello-azure/g" $TERRAFORM_VARIABLES_TF_PATH
+TF_VARIABLES_CONFIG="${CODESPACE_VSCODE_FOLDER}/terraform/hello.variables.tfbackend"
+cp ${CODESPACE_VSCODE_FOLDER}/terraform/hello.variables.tfbackend.example $TF_VARIABLES_CONFIG
+sed -i "s/rg-hello-azure/${GITHUB_USER}-rg-hello-azure/g" $TF_VARIABLES_CONFIG
+sed -i "s/acrhelloazure/${GITHUB_USER}acrhelloazure/g" $TF_VARIABLES_CONFIG
+sed -i "s/aci-hello-azure/${GITHUB_USER}-aci-hello-azure/g" $TF_VARIABLES_CONFIG
+# Valgfritt å endre lokasjon. Se oversikt: https://learn.microsoft.com/en-us/azure/reliability/regions-list.
+# sed -i "s/norwayeast/norwaywest/g" $TF_VARIABLES_CONFIG
+```
+
+Lagre endringen i git repositoriet.
+
+```bash
+git add ${CODESPACE_VSCODE_FOLDER}/terraform/hello.variables.tfbackend
+git commit -m "Konfigurasjon med tilpassede ressursnavn."
 ```
 
 ### Endre Azure region (valgfritt)
@@ -211,7 +212,7 @@ Om du har fulgt guiden hit så er det mulig at du kan hoppe over stegene 1, 2 og
 4. Naviger til terraform-mappen og kjør:
    ```bash
    cd terraform
-   terraform init -backend-config="backend.hcl"
+   terraform init -backend-config="hello.variables.tfbackend"
    terraform plan
    terraform apply
    ```
@@ -226,22 +227,25 @@ Om du har fulgt guiden hit så er det mulig at du kan hoppe over stegene 1, 2 og
 ## 📁 Prosjektstruktur
 
 ```
-iac-hello-azure/
-├── .devcontainer/
-│   └── devcontainer.json       # GitHub Codespaces konfigurasjon
-├── .github/
-│   └── workflows/
-│       ├── docker-build.yml    # Workflow for Docker image
-│       └── terraform-deploy.yml # Workflow for Terraform deployment
-├── docker/
-│   ├── Dockerfile              # Dockerfile for nginx container
-│   └── index.html              # Custom HTML side
-├── terraform/
-│   ├── main.tf                 # Terraform provider konfigurasjon
-│   ├── variables.tf            # Input variabler
-│   ├── resources.tf            # Azure ressurser
-│   ├── outputs.tf              # Output verdier
-│   └── backend.hcl.example     # Eksempel på backend konfigurasjon
+$ tree -a -I ".git|.gitignore|*.tfbackend" --noreport --dirsfirst -n
+.
+├── .devcontainer
+│   └── devcontainer.json
+├── docker
+│   ├── Dockerfile
+│   └── index.html
+├── .github
+│   ├── workflows
+│   │   ├── docker-build.yml
+│   │   └── terraform-deploy.yml
+│   └── CODEOWNERS
+├── terraform
+│   ├── hello.variables.tfbackend.example
+│   ├── main.tf
+│   ├── outputs.tf
+│   ├── resources.tf
+│   └── variables.tf
+├── LICENSE
 └── README.md
 ```
 
