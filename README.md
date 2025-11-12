@@ -150,8 +150,6 @@ az storage container create \
 
 ### Endre ressursnavn (anbefalt)
 
-**Avsnitt i arbeid.**
-
 Vi må overstyre `terraform/variables.tf`, legg merke til standardverdiene for følgende variabler.
 
 ```hcl
@@ -174,23 +172,26 @@ variable "location" {
 }
 ```
 
-Det er ikke nødvendig å endre `terraform/variables.tf`, istedenfor kan vi bruke en konfigurasjonsfil som vi bruker når vi kjører `terraform init` senere. Kjør følgende kode.
+Det er ikke nødvendig å endre `terraform/variables.tf`, istedenfor kan vi bruke en konfigurasjonsfil som leses automatisk når vi kjører `terraform init` og `terraform plan`.
+
+Kjør følgende kode.
 
 ```bash
-TF_VARIABLES_CONFIG="${CODESPACE_VSCODE_FOLDER}/terraform/hello.variables.tfbackend"
-cp ${CODESPACE_VSCODE_FOLDER}/terraform/hello.variables.tfbackend.example $TF_VARIABLES_CONFIG
-sed -i "s/rg-hello-azure/${GITHUB_USER}-rg-hello-azure/g" $TF_VARIABLES_CONFIG
-sed -i "s/acrhelloazure/${GITHUB_USER}acrhelloazure/g" $TF_VARIABLES_CONFIG
-sed -i "s/aci-hello-azure/${GITHUB_USER}-aci-hello-azure/g" $TF_VARIABLES_CONFIG
+TF_VARIABLES_CONFIG="${CODESPACE_VSCODE_FOLDER}/terraform/${GITHUB_USER}.auto.tfvars"
+cp ${CODESPACE_VSCODE_FOLDER}/terraform/hello.auto.tfvars.example $TF_VARIABLES_CONFIG
+sed -i "s/rg-hello-azure/${GITHUB_USER,,}-rg-hello-azure/g" $TF_VARIABLES_CONFIG # Merk at ",," i "${GITHUB_USER,,}" gjør brukernavn til lower case i bash.
+sed -i "s/acrhelloazure/${GITHUB_USER,,}acrhelloazure/g" $TF_VARIABLES_CONFIG
+sed -i "s/aci-hello-azure/${GITHUB_USER,,}-aci-hello-azure/g" $TF_VARIABLES_CONFIG
 # Valgfritt å endre lokasjon. Se oversikt: https://learn.microsoft.com/en-us/azure/reliability/regions-list.
 # sed -i "s/norwayeast/norwaywest/g" $TF_VARIABLES_CONFIG
 ```
 
-Lagre endringen i git repositoriet.
+Lagre endringen i *ditt* git repository.
 
 ```bash
-git add ${CODESPACE_VSCODE_FOLDER}/terraform/hello.variables.tfbackend
-git commit -m "Konfigurasjon med tilpassede ressursnavn."
+echo '!'"/terraform/${GITHUB_USER}.auto.tfvars" >> "${CODESPACE_VSCODE_FOLDER}/.gitignore"
+git add ${CODESPACE_VSCODE_FOLDER}/terraform/${GITHUB_USER}.auto.tfvars ${CODESPACE_VSCODE_FOLDER}/.gitignore
+git commit -m "Lagt til mine egne Terraform variabler."
 ```
 
 ## 🚀 Komme i gang
@@ -208,7 +209,7 @@ Om du har fulgt guiden hit så er det mulig at du kan hoppe over stegene 1, 2 og
 4. Naviger til terraform-mappen og kjør:
    ```bash
    cd terraform
-   terraform init -backend-config="hello.variables.tfbackend"
+   terraform init
    terraform plan
    terraform apply
    ```
