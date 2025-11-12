@@ -10,25 +10,32 @@ Dette prosjektet demonstrerer hvordan man:
 
 ## 📋 Innhold
 
-- [Forutsetninger](#forutsetninger)
-- [Oppsett av GitHub Secrets](#oppsett-av-github-secrets)
-- [Komme i gang](#komme-i-gang)
-- [Prosjektstruktur](#prosjektstruktur)
-- [GitHub Workflows](#github-workflows)
+- [Forutsetninger](#-forutsetninger)
+- [Oppsett av GitHub Secrets](#-oppsett-av-github-secrets)
+- [Komme i gang](#-komme-i-gang)
+- [Prosjektstruktur](#-prosjektstruktur)
+- [GitHub Workflows](#-github-workflows)
 
 ## 🔧 Forutsetninger
+
+### Grunnleggende forutsetninger
 
 - Azure-abonnement
 - GitHub-konto
 - Azure Managed Identity (opprettes som en del av oppsettet)
 
+### Utviklingsmiljø
+
+ 1. Dette prosjektet er ment å kjøre i GitHub Codespaces.
+ 2. Normalt vil du først [opprette ditt eget GitHub repository basert på template](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template).
+ 3. Deretter kan du [åpne et repository i GitHub Codespaces](https://docs.github.com/en/codespaces/developing-in-a-codespace/creating-a-codespace-for-a-repository).
+ 4. Om du allerede har åpnet prosjektet i GitHub Codespaces, gå til [github.com/codespaces](https://github.com/codespaces) for å finne igjen instansen.
+
 ## 🔐 Oppsett av GitHub Secrets
 
-For å kjøre workflows og deploye til Azure, må følgende konfigureres i GitHub repository:
+For å kjøre workflows og deploye til Azure, må følgende konfigureres fra shell i Github Codespaces.
 
-### 1. Opprett Azure App Registration med Federated Credentials
-
-Dette prosjektet bruker **Managed Identities** via Azure Federated Identity (OIDC) for autentisering med GitHub Actions, som er sikrere enn service principals med hemmeligheter.
+### 1. Opprett Azure App Registration med Federated Credentials fra CLI
 
 ```bash
 # Logg inn på Azure
@@ -36,17 +43,24 @@ az login
 
 # Sett variabler
 SUBSCRIPTION_ID=$(az account show --query id -o tsv)
-APP_NAME="github-actions-hello-azure"
-REPO_OWNER="HNIKT-Tjenesteutvikling-Systemutvikling"
-REPO_NAME="iac-hello-azure-template"
+REPO_OWNER="$(echo $GITHUB_REPOSITORY | cut -d "/" -f 1)"
+REPO_NAME="$(echo $GITHUB_REPOSITORY | cut -d "/" -f 2)"
+APP_NAME="${GITHUB_USER}-${REPO_NAME}"
+echo "Opprettet variabler: SUBSCRIPTION_ID=${SUBSCRIPTION_ID}, REPO_OWNER=${REPO_OWNER}, REPO_NAME=${REPO_NAME}, APP_NAME=${APP_NAME}."
 
 # Opprett App Registration
 APP_ID=$(az ad app create --display-name "$APP_NAME" --query appId -o tsv)
-echo "Application (client) ID: $APP_ID"
+echo "Application (client) ID: APP_ID=${APP_ID}."
+```
 
+Problemløsing: Hva om jeg får feil `Directory permission is needed for the current user to register the application`?
+
+Svar: Inntil det er en løsning på dette, så kan oppsett av Github Workflow avventes, fortsett på steg 3.
+
+```bash
 # Opprett Service Principal
 SP_ID=$(az ad sp create --id $APP_ID --query id -o tsv)
-echo "Service Principal ID: $SP_ID"
+echo "Service Principal ID: SP_ID=${SP_ID}."
 
 # Gi Contributor-tilgang på subscription-nivå
 az role assignment create \
@@ -109,10 +123,11 @@ Hvis du bruker remote state backend:
 
 ```bash
 # Variabler
-RESOURCE_GROUP_NAME="rg-terraform-state"
+RESOURCE_GROUP_NAME="${GITHUB_USER}-rg-terraform-state"
 STORAGE_ACCOUNT_NAME="sttfstate$(openssl rand -hex 4)"
 CONTAINER_NAME="tfstate"
 LOCATION="norwayeast"
+echo "Opprettet variabler: RESOURCE_GROUP_NAME=${RESOURCE_GROUP_NAME}, STORAGE_ACCOUNT_NAME=${STORAGE_ACCOUNT_NAME}, CONTAINER_NAME=${CONTAINER_NAME}, LOCATION=${LOCATION}."
 
 # Opprett resource group
 az group create --name $RESOURCE_GROUP_NAME --location $LOCATION
@@ -127,14 +142,64 @@ az storage account create \
 # Opprett blob container
 az storage container create \
   --name $CONTAINER_NAME \
-  --account-name $STORAGE_ACCOUNT_NAME
+  --account-name $STORAGE_ACCOUNT_NAME \
+  --auth-mode login
+```
+
+## 🛠️ Tilpassing
+
+### Endre ressursnavn (anbefalt)
+
+**Avsnitt i arbeid.**
+
+Vi må overstyre `terraform/variables.tf`, legg merke til standardverdiene for følgende variabler.
+
+```hcl
+variable "resource_group_name" {
+  default = "rg-hello-azure"  # Denne ønsker vi å overstyre.
+}
+
+variable "acr_name" {
+  # ACR-navn må være globalt unikt og kun inneholde små bokstaver og tall
+  default = "acrhelloazure"   # Må være unikt globalt.
+}
+
+variable "container_name" {
+  # Brukes også som DNS-label og må være globalt unikt
+  default = "aci-hello-azure"  # Må være unikt globalt.
+}
+
+variable "location" {
+  default = "norwayeast"  # Endre til ønsket region, dette er valgfritt.
+}
+```
+
+Det er ikke nødvendig å endre `terraform/variables.tf`, istedenfor kan vi bruke en konfigurasjonsfil som vi bruker når vi kjører `terraform init` senere. Kjør følgende kode.
+
+```bash
+TF_VARIABLES_CONFIG="${CODESPACE_VSCODE_FOLDER}/terraform/hello.variables.tfbackend"
+cp ${CODESPACE_VSCODE_FOLDER}/terraform/hello.variables.tfbackend.example $TF_VARIABLES_CONFIG
+sed -i "s/rg-hello-azure/${GITHUB_USER}-rg-hello-azure/g" $TF_VARIABLES_CONFIG
+sed -i "s/acrhelloazure/${GITHUB_USER}acrhelloazure/g" $TF_VARIABLES_CONFIG
+sed -i "s/aci-hello-azure/${GITHUB_USER}-aci-hello-azure/g" $TF_VARIABLES_CONFIG
+# Valgfritt å endre lokasjon. Se oversikt: https://learn.microsoft.com/en-us/azure/reliability/regions-list.
+# sed -i "s/norwayeast/norwaywest/g" $TF_VARIABLES_CONFIG
+```
+
+Lagre endringen i git repositoriet.
+
+```bash
+git add ${CODESPACE_VSCODE_FOLDER}/terraform/hello.variables.tfbackend
+git commit -m "Konfigurasjon med tilpassede ressursnavn."
 ```
 
 ## 🚀 Komme i gang
 
 ### Alternativ 1: Bruk GitHub Codespaces (anbefalt)
 
-1. Klikk på **Code** → **Codespaces** → **Create codespace on main**
+Om du har fulgt guiden hit så er det mulig at du kan hoppe over stegene 1, 2 og 3.
+
+1. Se [forutsetningene](#-forutsetninger) igjen, og pass på at du har et kjørende Codespace for de neste stegene.
 2. Vent til containeren er bygget (inkluderer Terraform og Azure CLI)
 3. Logg inn på Azure:
    ```bash
@@ -143,7 +208,7 @@ az storage container create \
 4. Naviger til terraform-mappen og kjør:
    ```bash
    cd terraform
-   terraform init
+   terraform init -backend-config="hello.variables.tfbackend"
    terraform plan
    terraform apply
    ```
@@ -158,22 +223,25 @@ az storage container create \
 ## 📁 Prosjektstruktur
 
 ```
-iac-hello-azure/
-├── .devcontainer/
-│   └── devcontainer.json       # GitHub Codespaces konfigurasjon
-├── .github/
-│   └── workflows/
-│       ├── docker-build.yml    # Workflow for Docker image
-│       └── terraform-deploy.yml # Workflow for Terraform deployment
-├── docker/
-│   ├── Dockerfile              # Dockerfile for nginx container
-│   └── index.html              # Custom HTML side
-├── terraform/
-│   ├── main.tf                 # Terraform provider konfigurasjon
-│   ├── variables.tf            # Input variabler
-│   ├── resources.tf            # Azure ressurser
-│   ├── outputs.tf              # Output verdier
-│   └── backend.hcl.example     # Eksempel på backend konfigurasjon
+$ tree -a -I ".git|.gitignore|*.tfbackend" --noreport --dirsfirst -n
+.
+├── .devcontainer
+│   └── devcontainer.json
+├── docker
+│   ├── Dockerfile
+│   └── index.html
+├── .github
+│   ├── workflows
+│   │   ├── docker-build.yml
+│   │   └── terraform-deploy.yml
+│   └── CODEOWNERS
+├── terraform
+│   ├── hello.variables.tfbackend.example
+│   ├── main.tf
+│   ├── outputs.tf
+│   ├── resources.tf
+│   └── variables.tf
+├── LICENSE
 └── README.md
 ```
 
@@ -203,40 +271,6 @@ Steg:
 1. Bygger Docker image
 2. Tagger med commit SHA og "latest"
 3. Pusher til Azure Container Registry
-
-## 🛠️ Tilpassing
-
-### Endre ressursnavn
-
-Rediger `terraform/variables.tf` for å endre standardverdier:
-
-```hcl
-variable "resource_group_name" {
-  default = "rg-hello-azure"  # Endre her
-}
-
-variable "acr_name" {
-  # ACR-navn må være globalt unikt og kun inneholde små bokstaver og tall
-  default = "acrhelloazure"   # Må være unikt globalt - legg til et suffiks!
-}
-
-variable "container_name" {
-  # Brukes også som DNS-label og må være globalt unikt
-  default = "aci-hello-azure"  # Må være unikt globalt - legg til et suffiks!
-}
-```
-
-**Viktig:** ACR-navn og container-navn må være globalt unike. Legg til et unikt suffiks, f.eks. dine initialer eller et tilfeldig tall:
-- `acrhelloazurejhn123`
-- `aci-hello-azure-jhn123`
-
-### Endre Azure region
-
-```hcl
-variable "location" {
-  default = "norwayeast"  # Endre til ønsket region
-}
-```
 
 ## 📝 Lisens
 

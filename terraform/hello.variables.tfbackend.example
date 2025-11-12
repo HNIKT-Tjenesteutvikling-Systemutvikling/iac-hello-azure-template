@@ -1,0 +1,4 @@
+resource_group_name  = "rg-hello-azure"
+acr_name             = "acrhelloazure"
+container_name       = "aci-hello-azure"
+location             = "norwayeast"
