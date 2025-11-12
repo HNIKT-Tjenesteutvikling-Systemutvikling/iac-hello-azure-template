@@ -28,7 +28,7 @@ Dette prosjektet demonstrerer hvordan man:
 
  1. Dette prosjektet er ment å kjøre i GitHub Codespaces.
  2. Normalt vil du først [opprette ditt eget GitHub repository basert på template](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template).
- 3. Deretter kan du [åpne ett repository i GitHub Codespaces](https://docs.github.com/en/codespaces/developing-in-a-codespace/creating-a-codespace-for-a-repository).
+ 3. Deretter kan du [åpne et repository i GitHub Codespaces](https://docs.github.com/en/codespaces/developing-in-a-codespace/creating-a-codespace-for-a-repository).
  4. Om du allerede har åpnet prosjektet i GitHub Codespaces, gå til [github.com/codespaces](https://github.com/codespaces) for å finne igjen instansen.
 
 ## 🔐 Oppsett av GitHub Secrets
