@@ -60,7 +60,7 @@ Svar: Inntil det er en løsning på dette, så kan oppsett av Github Workflow av
 ```bash
 # Opprett Service Principal
 SP_ID=$(az ad sp create --id $APP_ID --query id -o tsv)
-echo "Service Principal ID: SP_ID=${SP_ID}"
+echo "Service Principal ID: SP_ID=${SP_ID}."
 
 # Gi Contributor-tilgang på subscription-nivå
 az role assignment create \
