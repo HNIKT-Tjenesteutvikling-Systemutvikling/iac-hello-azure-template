@@ -168,6 +168,10 @@ variable "container_name" {
   # Brukes også som DNS-label og må være globalt unikt
   default = "aci-hello-azure"  # Må være unikt globalt.
 }
+
+variable "location" {
+  default = "norwayeast"  # Endre til ønsket region, dette er valgfritt.
+}
 ```
 
 Det er ikke nødvendig å endre `terraform/variables.tf`, istedenfor kan vi bruke en konfigurasjonsfil som vi bruker når vi kjører `terraform init` senere. Kjør følgende kode.
@@ -187,14 +191,6 @@ Lagre endringen i git repositoriet.
 ```bash
 git add ${CODESPACE_VSCODE_FOLDER}/terraform/hello.variables.tfbackend
 git commit -m "Konfigurasjon med tilpassede ressursnavn."
-```
-
-### Endre Azure region (valgfritt)
-
-```hcl
-variable "location" {
-  default = "norwayeast"  # Endre til ønsket region
-}
 ```
 
 ## 🚀 Komme i gang
