@@ -199,7 +199,7 @@ git commit -m "Konfigurasjon med tilpassede ressursnavn."
 
 Om du har fulgt guiden hit så er det mulig at du kan hoppe over stegene 1, 2 og 3.
 
-1. Se [forutsetningene](#-forutsetninger) igjen, og pass på at du har ett kjørende Codespace for de neste stegene.
+1. Se [forutsetningene](#-forutsetninger) igjen, og pass på at du har et kjørende Codespace for de neste stegene.
 2. Vent til containeren er bygget (inkluderer Terraform og Azure CLI)
 3. Logg inn på Azure:
    ```bash
